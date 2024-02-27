@@ -12,7 +12,7 @@ from ldcast.visualization import plots
 
 
 def read_data(
-    data_dir="../data/demo/20210622",
+    data_dir="/home/pkools/thesis-forecasting/ldcast/data/demo/20210622",
     t0=datetime(2021,6,22,18,35),
     interval=timedelta(minutes=5),
     past_timesteps=4,
