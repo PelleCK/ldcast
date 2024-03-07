@@ -23,7 +23,7 @@ def read_data(
     t = t0 - (past_timesteps-1) * interval
     for i in range(past_timesteps):
         timestamp = t.strftime("%y%j%H%M")
-        fn = f"RZC{timestamp}VL.[80]01.h5"
+        fn = f"RZC{timestamp}VL.801.h5"
         fn = os.path.join(data_dir, fn)
         found_files = glob.glob(fn)
         if found_files:
