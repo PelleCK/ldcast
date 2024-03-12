@@ -72,6 +72,7 @@ class Forecast:
         embed_dim = [128]
         analysis_depth = [4]
 
+        print("Setting up LDM")
         # setup forecaster
         analysis_net = analysis.AFNONowcastNetCascade(
             autoencoders,

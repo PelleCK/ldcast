@@ -93,6 +93,7 @@ def forecast_demo(
     )
     print(R_past.shape)
     if ensemble_members == 1:
+        print("Using single model")
         fc = forecast.Forecast(
             ldm_weights_fn=ldm_weights_fn,
             autoenc_weights_fn=autoenc_weights_fn
