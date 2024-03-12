@@ -6,13 +6,14 @@ from fire import Fire
 import h5py
 from matplotlib import pyplot as plt
 import numpy as np
+import torch
 
 from ldcast import forecast
 from ldcast.visualization import plots
 
 
 def read_data(
-    data_dir="../data/demo/20210622",
+    data_dir="./data/demo/20210622",
     t0=datetime(2021,6,22,18,35),
     interval=timedelta(minutes=5),
     past_timesteps=4,
@@ -23,7 +24,7 @@ def read_data(
     t = t0 - (past_timesteps-1) * interval
     for i in range(past_timesteps):
         timestamp = t.strftime("%y%j%H%M")
-        fn = f"RZC{timestamp}VL.[80]01.h5"
+        fn = f"RZC{timestamp}VL.801.h5"
         fn = os.path.join(data_dir, fn)
         found_files = glob.glob(fn)
         if found_files:
@@ -74,11 +75,11 @@ def plot_frame(R, fn, draw_border=True, t=None, label=None):
 
 
 def forecast_demo(
-    ldm_weights_fn="../models/genforecast/genforecast-radaronly-256x256-20step.pt",
-    autoenc_weights_fn="../models/autoenc/autoenc-32-0.01.pt",
-    num_diffusion_iters=50,
-    out_dir="../figures/demo/",
-    data_dir="../data/demo/20210622",
+    ldm_weights_fn="./models/genforecast/genforecast-radaronly-256x256-20step.pt",
+    autoenc_weights_fn="./models/autoenc/autoenc-32-0.01.pt",
+    num_diffusion_iters=1, # 50
+    out_dir="./figures/demo/",
+    data_dir="./data/demo/20210622",
     t0=datetime(2021,6,22,18,35),
     interval=timedelta(minutes=5),
     past_timesteps=4,
@@ -90,6 +91,7 @@ def forecast_demo(
         data_dir=data_dir, t0=t0, interval=interval,
         past_timesteps=past_timesteps, crop_box=crop_box
     )
+    print(R_past.shape)
     if ensemble_members == 1:
         fc = forecast.Forecast(
             ldm_weights_fn=ldm_weights_fn,
@@ -129,4 +131,25 @@ def forecast_demo(
 
 
 if __name__ == "__main__":
+    t = torch.cuda.get_device_properties(0).total_memory
+    r = torch.cuda.memory_reserved(0)
+    a = torch.cuda.memory_allocated(0)
+    f = r-a  # free inside reserved
+    print(f"Initial free memory: {f/1024**3:.2f} GB")
+    print(f"Initial reserved memory: {r/1024**3:.2f} GB")
+    print(f"Initial allocated memory: {a/1024**3:.2f} GB")
+    print(f"Initial total memory: {t/1024**3:.2f} GB")
+
+    
+    torch.cuda.empty_cache()
+    
+    t = torch.cuda.get_device_properties(0).total_memory
+    r = torch.cuda.memory_reserved(0)
+    a = torch.cuda.memory_allocated(0)
+    f = r-a  # free inside reserved    
+    print(f"Free memory: {f/1024**3:.2f} GB")
+    print(f"Reserved memory: {r/1024**3:.2f} GB")
+    print(f"Allocated memory: {a/1024**3:.2f} GB")
+    print(f"Total memory: {t/1024**3:.2f} GB")
+
     Fire(forecast_demo)
