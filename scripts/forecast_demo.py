@@ -43,7 +43,7 @@ def read_data(
 
 def plot_border(ax, crop_box=((128,480), (160,608))):    
     import shapefile
-    border = shapefile.Reader("../data/Border_CH.shp")
+    border = shapefile.Reader("./data/Border_CH.shp")
     shapes = list(border.shapeRecords())
     for shape in shapes:
         x = np.array([i[0]/1000. for i in shape.shape.points[:]])
