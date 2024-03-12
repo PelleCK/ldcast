@@ -210,11 +210,13 @@ class AFNONowcastNetBase(nn.Module):
     def forward(self, x):
         (x, t_relative) = list(zip(*x))
         print('\n\nx, t_relative, x[0].shape:\n')
-        print(x)
+        # print(x)
         print(t_relative)
         print(x[0].shape)
+        print(len(x))
         # encoding + analysis for each input
         def process_input(i):
+            print('x[i]: ', x[i])
             z = self.autoencoder[i].encode(x[i])[0]
             z = self.proj[i](z)
             z = z.permute(0,2,3,4,1)
