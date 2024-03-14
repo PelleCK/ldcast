@@ -145,15 +145,24 @@ def forecast_demo(
     # then plot the 32 channels with each channel as a subplot
     for k, v in feature_maps.items():
         print(k, v.shape)
-        fig, axs = plt.subplots(4, 8, figsize=(15, 10), dpi=150)
-        for i in range(4):
-            for j in range(8):
-                channel = i*8 + j
-                axs[i][j].imshow(v[0, channel, 0, ...].mean(axis=-1), cmap='gray')
-                axs[i][j].set_title(f'Mean of embedding of channel {channel} after {k} block')
-                axs[i][j].axis('off')
-        fig.savefig(os.path.join(out_dir, f'emb_means_after_{k}.png'), bbox_inches='tight')
-        plt.close(fig)
+        if k == 'analysis':
+            # no channels for analysis output, so single plot
+            v = v.mean(axis=-1)
+            fig = plt.figure(dpi=150)
+            ax = fig.add_subplot()
+            ax.imshow(v[0, 0, ...], cmap='gray')
+            ax.set_title(f'Mean of embedding after {k} block')
+            ax.axis('off')
+            fig.savefig(os.path.join(out_dir, f'emb_means_after_{k}.png'), bbox_inches='tight')
+            plt.close(fig)
+        else:
+            fig, axs = plt.subplots(1, 5, figsize=(15, 10), dpi=150)
+            for ax, channel in enumerate(axs):
+                ax.imshow(v[0, channel, 0, ...].mean(axis=-1), cmap='gray')
+                ax.set_title(f'Mean of embedding in channel {channel} after {k} block')
+                ax.axis('off')
+            fig.savefig(os.path.join(out_dir, f'emb_means_after_{k}.png'), bbox_inches='tight')
+            plt.close(fig)
 
 
 if __name__ == "__main__":
