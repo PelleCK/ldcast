@@ -105,7 +105,7 @@ def forecast_demo(
             feature_maps[module] = output
 
         fc.ldm.context_encoder.analysis[0][-1].register_forward_hook(hook_fn)
-        fc.ldm.context_encoder.analysis.temporal_transformer[-1].register_forward_hook(hook_fn)
+        fc.ldm.context_encoder.temporal_transformer[-1].register_forward_hook(hook_fn)
         fc.ldm.context_encoder.fusion.register_forward_hook(hook_fn)
         fc.ldm.forecast[-1].register_forward_hook(hook_fn)
 
@@ -116,7 +116,7 @@ def forecast_demo(
 
         print('feature maps keys:', feature_maps.keys())
         print('feature maps shapes:', {k: v.shape for k, v in feature_maps.items()})
-        
+
     elif ensemble_members > 1:
         fc = forecast.ForecastDistributed(
             ldm_weights_fn=ldm_weights_fn,
