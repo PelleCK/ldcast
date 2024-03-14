@@ -132,6 +132,7 @@ def plot_vae_analysis(inputs, xs, latents, ys, reconstructions, ts, out_dir, dra
     n = inputs.shape[0]  # Assuming images is a numpy array of shape [n_images, height, width]
     
     fig, axs = plt.subplots(n, 4, figsize=(15, 5*n), dpi=150)  # Create a row of 3 subplots
+    print('latent shape:', latents.shape)
     for i in range(n):
         # Plot original image
         plot_frame(inputs[i], axs[i][0], draw_border=True, t=ts[i], label="Original")
@@ -163,7 +164,7 @@ def plot_vae_analysis(inputs, xs, latents, ys, reconstructions, ts, out_dir, dra
             axs[i][j].set_title(f'Channel {channel}')
             axs[i][j].axis('off')
 
-    fig.savefig(os.path.join(out_dir, f'Latent_Space.png'), bbox_inches='tight')
+    fig.savefig(os.path.join(out_dir, f'Latent_Space Posterior Sample.png'), bbox_inches='tight')
     plt.close(fig)
 
 def init_vae(vae_weights_fn):
@@ -195,7 +196,7 @@ def visualize_vae(
     vae = init_vae(vae_weights).to(device)
 
     with torch.no_grad():
-        y, z, _ = vae(x, sample_posterior=False)
+        y, z, _ = vae(x, sample_posterior=True)
         z = z.to(device='cpu').numpy()
 
     R_pred = inv_transform_precip(y)[0, ...]
