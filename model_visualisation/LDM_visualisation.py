@@ -101,13 +101,18 @@ def forecast_demo(
 
         feature_maps = {}
 
-        def hook_fn(module, input, output):
-            feature_maps[module] = output
+        def get_hook_fn(key):
+            def hook_fn(module, input, output):
+                feature_maps[key] = output.detach()  # Detach the output to avoid saving computation graph
+            return hook_fn
 
-        fc.ldm.context_encoder.analysis[0][-1].register_forward_hook(hook_fn)
-        fc.ldm.context_encoder.temporal_transformer[-1].register_forward_hook(hook_fn)
-        fc.ldm.context_encoder.fusion.register_forward_hook(hook_fn)
-        fc.ldm.context_encoder.forecast[-1].register_forward_hook(hook_fn)
+        # def hook_fn(module, input, output):
+        #     feature_maps[module] = output
+
+        fc.ldm.context_encoder.analysis[0][-1].register_forward_hook(get_hook_fn("analysis"))
+        fc.ldm.context_encoder.temporal_transformer[-1].register_forward_hook(get_hook_fn("temporal_transformer"))
+        fc.ldm.context_encoder.fusion.register_forward_hook(get_hook_fn("fusion"))
+        fc.ldm.context_encoder.forecast[-1].register_forward_hook(get_hook_fn("forecast"))
 
         R_pred = fc(
             R_past,
