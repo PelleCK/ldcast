@@ -149,7 +149,7 @@ def forecast_demo(
         for i in range(4):
             for j in range(8):
                 channel = i*8 + j
-                axs[i][j].imshow(v[0, channel, 0, ...].mean(dim=-1), cmap='gray')
+                axs[i][j].imshow(v[0, channel, 0, ...].mean(axis=-1), cmap='gray')
                 axs[i][j].set_title(f'Mean of embedding of channel {channel} after {k} block')
                 axs[i][j].axis('off')
         fig.savefig(os.path.join(out_dir, f'emb_means_after_{k}.png'), bbox_inches='tight')
