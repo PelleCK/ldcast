@@ -6,6 +6,7 @@ from fire import Fire
 import h5py
 from matplotlib import pyplot as plt
 import numpy as np
+import torch
 
 from ldcast import forecast
 from ldcast.visualization import plots
@@ -42,7 +43,7 @@ def read_data(
 
 def plot_border(ax, crop_box=((128,480), (160,608))):    
     import shapefile
-    border = shapefile.Reader("../data/Border_CH.shp")
+    border = shapefile.Reader("./data/Border_CH.shp")
     shapes = list(border.shapeRecords())
     for shape in shapes:
         x = np.array([i[0]/1000. for i in shape.shape.points[:]])
@@ -92,10 +93,21 @@ def forecast_demo(
     )
     print(R_past.shape)
     if ensemble_members == 1:
+        print("Using single model")
         fc = forecast.Forecast(
             ldm_weights_fn=ldm_weights_fn,
             autoenc_weights_fn=autoenc_weights_fn
         )
+
+        feature_maps = {}
+
+        def hook_fn(module, input, output):
+            feature_maps[module] = output
+
+        fc.ldm.context_encoder.analysis.register_forward_hook(hook_fn)
+
+        print('feature maps: ', feature_maps)
+
         R_pred = fc(
             R_past,
             num_diffusion_iters=num_diffusion_iters
@@ -130,4 +142,4 @@ def forecast_demo(
 
 
 if __name__ == "__main__":
-    Fire(forecast_demo)
+        Fire(forecast_demo)

@@ -81,18 +81,42 @@ def inv_transform_precip(
     return R.to(device='cpu').numpy()
 
 #TODO: plot border function
-def plot_border(ax, crop_box):
-    pass
+def plot_border(ax, crop_box=((128,480), (160,608))):    
+    import shapefile
+    border = shapefile.Reader("./data/Border_CH.shp")
+    shapes = list(border.shapeRecords())
+    for shape in shapes:
+        x = np.array([i[0]/1000. for i in shape.shape.points[:]])
+        y = np.array([i[1]/1000. for i in shape.shape.points[:]])
+        ax.plot(
+            x-crop_box[1][0]-255, 480-y-crop_box[0][0],
+            'k', linewidth=1.0
+        )
 
 #TODO: plot frame function
-def plot_frame(R, fn, draw_border, t, label):
-    pass
+def plot_frame(R, ax, draw_border=True, t=None, label=None):
+    # fig = plt.figure(dpi=150)
+    # ax = fig.add_subplot()
+    plots.plot_precip_image(ax, R)
+    ax.set_title(label)
+    if draw_border:
+        plot_border(ax)
+    if t is not None:
+        timestamp = "%Y-%m-%d %H:%M UTC"
+        ax.text(
+            0.02, 0.98, t.strftime(timestamp),
+            horizontalalignment='left', verticalalignment='top',
+            transform=ax.transAxes            
+        )
 
-#TODO: plot latent function
-def plot_latent(latent, fn):
-    pass
+# #TODO: plot latent function
+# def plot_latent(latent):
+#     channel = i*8 + j
+#     axs[i][j].imshow(latents[0, channel, 0, ...], cmap='gray')
+#     axs[i][j].set_title(f'Channel {channel}')
+#     axs[i][j].axis('off')
 
-def plot_vae_analysis(images, latent_representations, reconstructed_images, out_dir, draw_border=True, labels=None, crop_box=None):
+def plot_vae_analysis(inputs, xs, latents, ys, reconstructions, ts, out_dir, draw_border=True, labels=None, crop_box=None):
     """
     Plots the original images, their latent space representations, and the reconstructed images side by side.
     
@@ -105,38 +129,42 @@ def plot_vae_analysis(images, latent_representations, reconstructed_images, out_
     """
     os.makedirs(out_dir, exist_ok=True)
 
-    n = images.shape[0]  # Assuming images is a numpy array of shape [n_images, height, width]
+    n = inputs.shape[0]  # Assuming images is a numpy array of shape [n_images, height, width]
     
+    fig, axs = plt.subplots(n, 4, figsize=(15, 5*n), dpi=150)  # Create a row of 3 subplots
     for i in range(n):
-        fig, axs = plt.subplots(1, 3, figsize=(15, 5), dpi=150)  # Create a row of 3 subplots
-        
         # Plot original image
-        axs[0].imshow(images[i], cmap='gray')
-        axs[0].set_title('Input Image' if not labels else f'Input: {labels[i]}')
-        axs[0].axis('off')
-        if draw_border:
-            plot_border(axs[0], crop_box)
+        plot_frame(inputs[i], axs[i][0], draw_border=True, t=ts[i], label="Original")
+
+        # plot input precipitation values
+        axs[i][1].imshow(xs[i], cmap='gray')
+        axs[i][1].set_title('Transformed input')
+        axs[i][1].axis('off')
+
+        # plot output precipitation values
+        axs[i][2].imshow(ys[i], cmap='gray')
+        axs[i][2].set_title('Model output')
+        axs[i][2].axis('off')
         
-        # Plot latent representation
-        # This is a simplification. Adjust this based on the actual shape and content of your latent representations.
-        if latent_representations[i].ndim > 2:
-            latent_img = latent_representations[i].reshape(-1, latent_representations[i].shape[-1])  # Reshape if needed
-        else:
-            latent_img = latent_representations[i]
-        axs[1].imshow(latent_img, cmap='gray')
-        axs[1].set_title('Latent Space')
-        axs[1].axis('off')
-
         # Plot reconstructed image
-        axs[2].imshow(reconstructed_images[i], cmap='gray')
-        axs[2].set_title('Reconstructed Image')
-        axs[2].axis('off')
-        if draw_border:
-            plot_border(axs[2], crop_box)
+        plot_frame(reconstructions[i], axs[i][3], draw_border=True, t=ts[i], label="Reconstructed (inverse transformed output)")
 
-        # Save the figure
-        fig.savefig(os.path.join(out_dir, f'VAE_Analysis_{i:02d}.png'), bbox_inches='tight')
-        plt.close(fig)
+    # Save the figure
+    fig.savefig(os.path.join(out_dir, f'VAE_Analysis.png'), bbox_inches='tight')
+    plt.close(fig)
+
+    # plot latent space: (1, 32, 1, 88, 112)
+    # discard first dimension, and plot all 32 channels in 4 rows of 8 channels each
+    fig, axs = plt.subplots(4, 8, figsize=(15, 10), dpi=150)
+    for i in range(4):
+        for j in range(8):
+            channel = i*8 + j
+            axs[i][j].imshow(latents[0, channel, 0, ...], cmap='gray')
+            axs[i][j].set_title(f'Channel {channel}')
+            axs[i][j].axis('off')
+
+    fig.savefig(os.path.join(out_dir, f'Latent_Space.png'), bbox_inches='tight')
+    plt.close(fig)
 
 def init_vae(vae_weights_fn):
     enc = encoder.SimpleConvEncoder()
@@ -154,83 +182,31 @@ def visualize_vae(
         past_timesteps=4,
         crop_box=((128,480), (160,608)),
         draw_border=True
-    ):
+        ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    
     R_past = read_data(
         data_dir=data_dir, t0=t0, interval=interval,
         past_timesteps=past_timesteps, crop_box=crop_box
     )
+    
     x = transform_precip(R_past, device=device)
-    print(x.shape)
 
     vae = init_vae(vae_weights).to(device)
-    print(vae)
 
-    # z, y = vae.encode(x), vae.decode(z)
     with torch.no_grad():
-        for i in range(x.shape[0]):
-            y, z, _ = vae(x[i,...].unsqueeze(0), sample_posterior=False)
-            print(x[i,...].unsqueeze(0).shape, y.shape, z.shape)
-            if i == 0:
-                z_all = z
-                y_all = y
-            else:
-                z_all = torch.cat((z_all, z), dim=0)
-                y_all = torch.cat((y_all, y), dim=0)
-        # y, z, _ = vae(x)
-        # z = z.to(device='cpu').numpy()
-        z = z_all.to(device='cpu').numpy()
-        # y = y_all.to(device='cpu').numpy()
+        y, z, _ = vae(x, sample_posterior=False)
+        z = z.to(device='cpu').numpy()
 
     R_pred = inv_transform_precip(y)[0, ...]
     print(x.shape, R_past.shape, z.shape, R_pred.shape)
 
-    # remove first two empty dimensions of R_pred
-
-
-    plot_vae_analysis(R_past, z, R_pred, out_dir, draw_border=draw_border, crop_box=crop_box)
-
-    # #TODO: change to plot all frames in a loop
-    # for k in range(R_past.shape[0]):
-    #     fn = os.path.join(out_dir, f"R_past-{k:02d}.png")
-    #     t = t0 - (R_past.shape[0]-k-1) * interval
-    #     plot_frame(R_past[k,:,:], fn, draw_border=draw_border,
-    #         t=t, label="Input image")
-
-    # # plot_frame(R_past, f"{out_dir}/input.png", draw_border, t0, "input")
-
-    # #TODO: change to plot all frames in a loop
-    # if plot_latent:
-    #     for k in range(z.shape[0]):
-    #         fn = os.path.join(out_dir, f"latent-{k:02d}.png")
-    #         plot_latent(z[k,...], fn)
-    #     # plot_latent(z, f"{out_dir}/latent.png")
-
-    # #TODO: change to plot all frames in a loop
-    # for k in range(R_pred.shape[0]):
-    #     fn = os.path.join(out_dir, f"R_pred-{k:02d}.png")
-    #     t = t0 + (k+1)*interval
-    #     plot_frame(R_pred[k,:,:], fn, draw_border=draw_border,
-    #         t=t, label="Output image")
-    # # plot_frame(R_pred, f"{out_dir}/output.png", draw_border, t0, "output")
-        
-    # # plot the input, latent and output images in a single loop
-    # # and for each image, plot the input, latent and output images in a subplot
-    # # and save the plot to a file
-    # # note that there is no future prediction, but just a reconstruction of the input image
-    # # so the output image has the same time step as the input image
-    # for k in range(R_past.shape[0]):
-    #     fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-    #     t = t0 - (R_past.shape[0]-k-1) * interval
-    #     plot_frame(R_past[k,:,:], fn, draw_border=draw_border,
-    #         t=t, label="Input image")
-    #     plot_latent(z[k,...], fn)
-    #     t = t0 - (R_past.shape[0]-k-1) * interval
-    #     plot_frame(R_pred[k,:,:], fn, draw_border=draw_border,
-    #         t=t, label="Reconstruction")
-    #     plt.savefig(f"{out_dir}/R-{k:02d}.png")
-    #     plt.close()
+    # t = t0 - (R_past.shape[0]-k-1) * interval
+    # compute ts in advance for all frames
+    xs = x[0, 0, ...].cpu().numpy()
+    ys = y[0, 0, ...].cpu().numpy()
+    ts = [t0 - (R_past.shape[0]-k-1) * interval for k in range(R_past.shape[0])]
+    plot_vae_analysis(R_past, xs, z, ys, R_pred, ts, out_dir, draw_border=draw_border, crop_box=crop_box)
 
 
 
