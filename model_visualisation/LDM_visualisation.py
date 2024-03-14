@@ -78,7 +78,7 @@ def forecast_demo(
     ldm_weights_fn="./models/genforecast/genforecast-radaronly-256x256-20step.pt",
     autoenc_weights_fn="./models/autoenc/autoenc-32-0.01.pt",
     num_diffusion_iters=1, # 50
-    out_dir="./figures/demo/",
+    out_dir="./figures/forecaster_visualisation/",
     data_dir="./data/demo/20210622",
     t0=datetime(2021,6,22,18,35),
     interval=timedelta(minutes=5),
@@ -103,7 +103,7 @@ def forecast_demo(
 
         def get_hook_fn(key):
             def hook_fn(module, input, output):
-                feature_maps[key] = output.detach()  # Detach the output to avoid saving computation graph
+                feature_maps[key] = output.detach().cpu().numpy()  # Detach the output to avoid saving computation graph
             return hook_fn
 
         # def hook_fn(module, input, output):
@@ -138,17 +138,22 @@ def forecast_demo(
     else:
         raise ValueError("ensemble_members must be > 0")
 
-    os.makedirs(out_dir, exist_ok=True)
-    for k in range(R_past.shape[0]):
-        fn = os.path.join(out_dir, f"R_past-{k:02d}.png")
-        t = t0 - (R_past.shape[0]-k-1) * interval
-        plot_frame(R_past[k,:,:], fn, draw_border=draw_border,
-            t=t, label="Real")
-    for k in range(R_pred.shape[0]):
-        fn = os.path.join(out_dir, f"R_pred-{k:02d}.png")
-        t = t0 + (k+1)*interval
-        plot_frame(R_pred[k,:,:], fn, draw_border=draw_border,
-            t=t, label="Predicted")
+    # os.makedirs(out_dir, exist_ok=True)
+    
+    # plot feature maps from dictionary
+    # take the mean over the embedding dimension (last dimension, length 128)
+    # then plot the 32 channels with each channel as a subplot
+    for k, v in feature_maps.items():
+        print(k, v.shape)
+        fig, axs = plt.subplots(4, 8, figsize=(15, 10), dpi=150)
+        for i in range(4):
+            for j in range(8):
+                channel = i*8 + j
+                axs[i][j].imshow(v[0, channel, 0, ...].mean(dim=-1), cmap='gray')
+                axs[i][j].set_title(f'Mean of embedding of channel {channel} after {k} block')
+                axs[i][j].axis('off')
+        fig.savefig(os.path.join(out_dir, f'emb_means_after_{k}.png'), bbox_inches='tight')
+        plt.close(fig)
 
 
 if __name__ == "__main__":
