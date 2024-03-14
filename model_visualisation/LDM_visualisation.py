@@ -157,7 +157,7 @@ def forecast_demo(
             plt.close(fig)
         else:
             fig, axs = plt.subplots(1, 5, figsize=(15, 10), dpi=150)
-            for ax, channel in enumerate(axs):
+            for channel, ax in enumerate(axs):
                 ax.imshow(v[0, channel, 0, ...].mean(axis=-1), cmap='gray')
                 ax.set_title(f'Mean of embedding in channel {channel} after {k} block')
                 ax.axis('off')
