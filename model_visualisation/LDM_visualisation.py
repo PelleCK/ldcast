@@ -138,7 +138,7 @@ def forecast_demo(
     else:
         raise ValueError("ensemble_members must be > 0")
 
-    # os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(out_dir, exist_ok=True)
     
     # plot feature maps from dictionary
     # take the mean over the embedding dimension (last dimension, length 128)
