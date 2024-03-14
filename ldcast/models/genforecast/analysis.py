@@ -22,7 +22,6 @@ class AFNONowcastNetCascade(AFNONowcastNetBase):
             ch = ch_out
 
     def forward(self, x):
-        print(x)
         x = super().forward(x)
         img_shape = tuple(x.shape[-2:])
         cascade = {img_shape: x}
