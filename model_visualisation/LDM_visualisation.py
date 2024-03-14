@@ -114,7 +114,7 @@ def forecast_demo(
             num_diffusion_iters=num_diffusion_iters
         )
 
-        print('feature maps keys:', feature_maps.keys())
+        # print('feature maps keys:', feature_maps.keys())
         print('feature maps shapes:', {k.split('(')[0]: v.shape for k, v in feature_maps.items()})
 
     elif ensemble_members > 1:
