@@ -120,7 +120,7 @@ def forecast_demo(
         )
 
         # print('feature maps keys:', feature_maps.keys())
-        print('feature maps shapes:', {k.__class__.__name__: v.shape for k, v in feature_maps.items()})
+        print('feature maps shapes:', {k: v.shape for k, v in feature_maps.items()}) # k.__class__.__name__
 
     elif ensemble_members > 1:
         fc = forecast.ForecastDistributed(
