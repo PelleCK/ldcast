@@ -72,7 +72,6 @@ class Forecast:
         embed_dim = [128]
         analysis_depth = [4]
 
-        print("Setting up LDM")
         # setup forecaster
         analysis_net = analysis.AFNONowcastNetCascade(
             autoencoders,
@@ -115,14 +114,14 @@ class Forecast:
         x = [[x, timesteps]]
 
         # run LDM sampler
-        # with contextlib.redirect_stdout(None):
-        (s, intermediates) = self.sampler.sample(
-            num_diffusion_iters, 
-            x[0][0].shape[0],
-            gen_shape,
-            x,
-            progbar=self.verbose
-        )
+        with contextlib.redirect_stdout(None):
+            (s, intermediates) = self.sampler.sample(
+                num_diffusion_iters, 
+                x[0][0].shape[0],
+                gen_shape,
+                x,
+                progbar=self.verbose
+            )
 
         # postprocess outputs
         y_pred = self.ldm.autoencoder.decode(s)

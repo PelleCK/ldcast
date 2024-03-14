@@ -8,7 +8,6 @@ from ..blocks.resnet import ResBlock3D
 
 class AFNONowcastNetCascade(AFNONowcastNetBase):
     def __init__(self, *args, cascade_depth=4, **kwargs):
-        print('AFNONowcastNetCascade.__init__ called')
         super().__init__(*args, **kwargs)
         self.cascade_depth = cascade_depth
         self.resnet = nn.ModuleList()        
@@ -23,7 +22,6 @@ class AFNONowcastNetCascade(AFNONowcastNetBase):
             ch = ch_out
 
     def forward(self, x):
-        print('AFNONowcastNetCascade.forward called')
         print(x)
         x = super().forward(x)
         img_shape = tuple(x.shape[-2:])
