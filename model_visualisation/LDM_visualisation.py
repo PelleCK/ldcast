@@ -104,7 +104,7 @@ def forecast_demo(
         def hook_fn(module, input, output):
             feature_maps[module] = output
 
-        fc.ldm.context_encoder.analysis.register_forward_hook(hook_fn)
+        fc.ldm.context_encoder.analysis[0][3].register_forward_hook(hook_fn)
 
         R_pred = fc(
             R_past,
@@ -112,7 +112,7 @@ def forecast_demo(
         )
 
         print('feature maps: ', feature_maps)
-        print('feature maps: ', feature_maps[fc.ldm.context_encoder.analysis])
+        print('feature maps: ', feature_maps[fc.ldm.context_encoder.analysis[0][3]])
     elif ensemble_members > 1:
         fc = forecast.ForecastDistributed(
             ldm_weights_fn=ldm_weights_fn,
