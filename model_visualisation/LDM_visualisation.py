@@ -91,7 +91,7 @@ def forecast_demo(
         data_dir=data_dir, t0=t0, interval=interval,
         past_timesteps=past_timesteps, crop_box=crop_box
     )
-    print(R_past.shape)
+
     if ensemble_members == 1:
         print("Using single model")
         fc = forecast.Forecast(
@@ -107,7 +107,7 @@ def forecast_demo(
         fc.ldm.context_encoder.analysis[0][-1].register_forward_hook(hook_fn)
         fc.ldm.context_encoder.temporal_transformer[-1].register_forward_hook(hook_fn)
         fc.ldm.context_encoder.fusion.register_forward_hook(hook_fn)
-        fc.ldm.forecast[-1].register_forward_hook(hook_fn)
+        fc.ldm.context_encoder.forecast[-1].register_forward_hook(hook_fn)
 
         R_pred = fc(
             R_past,
