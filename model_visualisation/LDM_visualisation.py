@@ -175,9 +175,9 @@ def forecast_demo(
                 axs[0][channel].set_title(f'Mean of channel {channel} after {k}')
                 axs[0][channel].axis('off')
 
-                ax[1][channel].imshow(v_channel_max, cmap='gray')
-                ax[1][channel].set_title(f'Max of channel {channel} after {k}')
-                ax[1][channel].axis('off')
+                axs[1][channel].imshow(v_channel_max, cmap='gray')
+                axs[1][channel].set_title(f'Max of channel {channel} after {k}')
+                axs[1][channel].axis('off')
 
             # suptitle for entire figure
             fig.suptitle(f'Mean and max of embeddings after {k} block')
