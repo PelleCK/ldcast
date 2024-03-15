@@ -152,15 +152,15 @@ def forecast_demo(
 
             fig = plt.figure(dpi=150)
 
-            ax = fig.add_subplot()
-            ax.imshow(v_mean[0, 0, ...], cmap='gray')
-            ax.set_title(f'Mean of embedding after {k} block')
-            ax.axis('off')
+            ax1 = fig.add_subplot()
+            ax1.imshow(v_mean[0, 0, ...], cmap='gray')
+            ax1.set_title(f'Mean of embedding after {k} block')
+            ax1.axis('off')
 
-            ax = fig.add_subplot()
-            ax.imshow(v_max[0, 0, ...], cmap='gray')
-            ax.set_title(f'Max of embedding after {k} block')
-            ax.axis('off')
+            ax2 = fig.add_subplot()
+            ax2.imshow(v_max[0, 0, ...], cmap='gray')
+            ax2.set_title(f'Max of embedding after {k} block')
+            ax2.axis('off')
 
             fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
             plt.close(fig)
