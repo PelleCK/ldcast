@@ -147,21 +147,41 @@ def forecast_demo(
         print(k, v.shape)
         if k == 'analysis':
             # no channels for analysis output, so single plot
-            v = v.mean(axis=-1)
+            v_mean = v.mean(axis=-1)
+            v_max = v.max(axis=-1)
+
             fig = plt.figure(dpi=150)
+
             ax = fig.add_subplot()
-            ax.imshow(v[0, 0, ...], cmap='gray')
+            ax.imshow(v_mean[0, 0, ...], cmap='gray')
             ax.set_title(f'Mean of embedding after {k} block')
             ax.axis('off')
-            fig.savefig(os.path.join(out_dir, f'emb_means_after_{k}.png'), bbox_inches='tight')
+
+            ax = fig.add_subplot()
+            ax.imshow(v_max[0, 0, ...], cmap='gray')
+            ax.set_title(f'Max of embedding after {k} block')
+            ax.axis('off')
+
+            fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
             plt.close(fig)
         else:
-            fig, axs = plt.subplots(1, 5, figsize=(15, 10), dpi=150)
-            for channel, ax in enumerate(axs):
-                ax.imshow(v[0, channel, ...].mean(axis=-1), cmap='gray')
-                ax.set_title(f'Mean of embedding in channel {channel} after {k} block')
-                ax.axis('off')
-            fig.savefig(os.path.join(out_dir, f'emb_means_after_{k}.png'), bbox_inches='tight')
+            fig, axs = plt.subplots(2, 5, figsize=(15, 10), dpi=150)
+            for channel, ax_row in enumerate(axs):
+                v_channel_mean = v[0, channel, ...].mean(axis=-1)
+                v_channel_max = v[0, channel, ...].max(axis=-1)
+
+                ax_row[0].imshow(v_channel_mean, cmap='gray')
+                ax_row[0].set_title(f'Mean of channel {channel} after {k}')
+                ax_row[0].axis('off')
+
+                ax_row[1].imshow(v_channel_max, cmap='gray')
+                ax_row[1].set_title(f'Max of channel {channel} after {k}')
+                ax_row[1].axis('off')
+
+            # suptitle for entire figure
+            fig.suptitle(f'Mean and max of embeddings after {k} block')
+            fig.tight_layout()
+            fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
             plt.close(fig)
 
 
