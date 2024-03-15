@@ -165,18 +165,19 @@ def forecast_demo(
             fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
             plt.close(fig)
         else:
-            fig, axs = plt.subplots(2, 5, figsize=(15, 10), dpi=150)
-            for channel, ax_row in enumerate(axs):
+            channels = v.shape[1]
+            fig, axs = plt.subplots(2, channels, figsize=(15, 10), dpi=150)
+            for channel in range(channels):
                 v_channel_mean = v[0, channel, ...].mean(axis=-1)
                 v_channel_max = v[0, channel, ...].max(axis=-1)
 
-                ax_row[0].imshow(v_channel_mean, cmap='gray')
-                ax_row[0].set_title(f'Mean of channel {channel} after {k}')
-                ax_row[0].axis('off')
+                axs[0][channel].imshow(v_channel_mean, cmap='gray')
+                axs[0][channel].set_title(f'Mean of channel {channel} after {k}')
+                axs[0][channel].axis('off')
 
-                ax_row[1].imshow(v_channel_max, cmap='gray')
-                ax_row[1].set_title(f'Max of channel {channel} after {k}')
-                ax_row[1].axis('off')
+                ax[1][channel].imshow(v_channel_max, cmap='gray')
+                ax[1][channel].set_title(f'Max of channel {channel} after {k}')
+                ax[1][channel].axis('off')
 
             # suptitle for entire figure
             fig.suptitle(f'Mean and max of embeddings after {k} block')
