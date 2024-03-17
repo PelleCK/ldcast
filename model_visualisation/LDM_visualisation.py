@@ -73,6 +73,36 @@ def plot_frame(R, fn, draw_border=True, t=None, label=None):
     fig.savefig(fn, bbox_inches='tight')
     plt.close(fig)
 
+def plot_feature_maps(feature_maps, out_dir):
+        for k, v in feature_maps.items():
+            channels = v.shape[1]
+            fig, axs = plt.subplots(3, channels, figsize=(15, 10), dpi=150)
+
+            for channel in range(channels):
+                v_channel = v[0, channel, ...]
+                v_channel_mean = v_channel.mean(axis=-1)
+                v_channel_max = v_channel.max(axis=-1)
+                v_channel_norm = torch.norm(v_channel, p=2, dim=-1)
+
+                axs[0][channel].imshow(v_channel_mean, cmap='gray')
+                axs[0][channel].set_title(f'Mean of channel {channel}')
+                axs[0][channel].axis('off')
+
+                axs[1][channel].imshow(v_channel_max, cmap='gray')
+                axs[1][channel].set_title(f'Max of channel {channel}')
+                axs[1][channel].axis('off')
+
+                axs[2][channel].imshow(v_channel_norm, cmap='gray')
+                axs[2][channel].set_title(f'Embedding norm of channel {channel}')
+                axs[2][channel].axis('off')
+
+            # suptitle for entire figure
+            fig.suptitle(f'Mean, max and norm of embeddings after {k} block')
+            fig.tight_layout()
+            plt.show()
+            fig.savefig(os.path.join(out_dir, f'emb_mean_max_norm_after_{k}.png'), bbox_inches='tight')
+            plt.close(fig)
+
 
 def forecast_demo(
     ldm_weights_fn="./models/genforecast/genforecast-radaronly-256x256-20step.pt",
@@ -143,35 +173,7 @@ def forecast_demo(
     # plot feature maps from dictionary
     # take the mean over the embedding dimension (last dimension, length 128)
     # then plot the 32 channels with each channel as a subplot
-    def plot_feature_maps(feature_maps, out_dir):
-        for k, v in feature_maps.items():
-            channels = v.shape[1]
-            fig, axs = plt.subplots(3, channels, figsize=(15, 10), dpi=150)
-
-            for channel in range(channels):
-                v_channel = v[0, channel, ...]
-                v_channel_mean = v_channel.mean(axis=-1)
-                v_channel_max = v_channel.max(axis=-1)
-                v_channel_norm = torch.norm(v_channel, p=2, dim=-1)
-
-                axs[0][channel].imshow(v_channel_mean, cmap='gray')
-                axs[0][channel].set_title(f'Mean of channel {channel}')
-                axs[0][channel].axis('off')
-
-                axs[1][channel].imshow(v_channel_max, cmap='gray')
-                axs[1][channel].set_title(f'Max of channel {channel}')
-                axs[1][channel].axis('off')
-
-                axs[2][channel].imshow(v_channel_norm, cmap='gray')
-                axs[2][channel].set_title(f'Embedding norm of channel {channel}')
-                axs[2][channel].axis('off')
-
-            # suptitle for entire figure
-            fig.suptitle(f'Mean, max and norm of embeddings after {k} block')
-            fig.tight_layout()
-            plt.show()
-            fig.savefig(os.path.join(out_dir, f'emb_mean_max_norm_after_{k}.png'), bbox_inches='tight')
-            plt.close(fig)
+    plot_feature_maps(feature_maps, out_dir)
             
 
     # for k, v in feature_maps.items():
