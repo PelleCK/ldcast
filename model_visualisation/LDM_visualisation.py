@@ -98,7 +98,7 @@ def plot_feature_maps(feature_maps, out_dir):
             axs[1, channel].set_title(f'Max of channel {channel}')
             axs[1, channel].axis('off')
 
-            axs[2, channel].imshow(v_channel_norm, cmap='hot')
+            axs[2, channel].imshow(v_channel_norm, cmap='viridis')
             axs[2, channel].set_title(f'Embedding norm of channel {channel}')
             axs[2, channel].axis('off')
 
