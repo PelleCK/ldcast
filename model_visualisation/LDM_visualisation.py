@@ -82,7 +82,8 @@ def plot_feature_maps(feature_maps, out_dir):
                 v_channel = v[0, channel, ...]
                 v_channel_mean = v_channel.mean(axis=-1)
                 v_channel_max = v_channel.max(axis=-1)
-                v_channel_norm = torch.norm(v_channel, p=2, dim=-1)
+                # v_channel_norm = torch.norm(v_channel, p=2, dim=-1)
+                v_channel_norm = np.linalg.norm(v_channel, ord=2, axis=-1)
 
                 axs[0][channel].imshow(v_channel_mean, cmap='gray')
                 axs[0][channel].set_title(f'Mean of channel {channel}')
