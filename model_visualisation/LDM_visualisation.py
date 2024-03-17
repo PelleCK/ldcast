@@ -143,47 +143,78 @@ def forecast_demo(
     # plot feature maps from dictionary
     # take the mean over the embedding dimension (last dimension, length 128)
     # then plot the 32 channels with each channel as a subplot
-    for k, v in feature_maps.items():
-        print(k, v.shape)
-        if k == 'analysis':
-            # no channels for analysis output, so single plot
-            v_mean = v.mean(axis=-1)
-            v_max = v.max(axis=-1)
-
-            fig = plt.figure(dpi=150)
-
-            ax1 = fig.add_subplot(1, 2, 1)
-            ax1.imshow(v_mean[0, 0, ...], cmap='gray')
-            ax1.set_title(f'Mean of embedding after {k} block')
-            ax1.axis('off')
-
-            ax2 = fig.add_subplot(1, 2, 2)
-            ax2.imshow(v_max[0, 0, ...], cmap='gray')
-            ax2.set_title(f'Max of embedding after {k} block')
-            ax2.axis('off')
-
-            fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
-            plt.close(fig)
-        else:
+    def plot_feature_maps(feature_maps, out_dir):
+        for k, v in feature_maps.items():
             channels = v.shape[1]
-            fig, axs = plt.subplots(2, channels, figsize=(15, 10), dpi=150)
+            fig, axs = plt.subplots(3, channels, figsize=(15, 10), dpi=150)
+
             for channel in range(channels):
-                v_channel_mean = v[0, channel, ...].mean(axis=-1)
-                v_channel_max = v[0, channel, ...].max(axis=-1)
+                v_channel = v[0, channel, ...]
+                v_channel_mean = v_channel.mean(axis=-1)
+                v_channel_max = v_channel.max(axis=-1)
+                v_channel_norm = torch.norm(v_channel, p=2, dim=-1)
 
                 axs[0][channel].imshow(v_channel_mean, cmap='gray')
-                axs[0][channel].set_title(f'Mean of channel {channel} after {k}')
+                axs[0][channel].set_title(f'Mean of channel {channel}')
                 axs[0][channel].axis('off')
 
                 axs[1][channel].imshow(v_channel_max, cmap='gray')
-                axs[1][channel].set_title(f'Max of channel {channel} after {k}')
+                axs[1][channel].set_title(f'Max of channel {channel}')
                 axs[1][channel].axis('off')
 
+                axs[2][channel].imshow(v_channel_norm, cmap='gray')
+                axs[2][channel].set_title(f'Embedding norm of channel {channel}')
+                axs[2][channel].axis('off')
+
             # suptitle for entire figure
-            fig.suptitle(f'Mean and max of embeddings after {k} block')
+            fig.suptitle(f'Mean, max and norm of embeddings after {k} block')
             fig.tight_layout()
-            fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
+            plt.show()
+            fig.savefig(os.path.join(out_dir, f'emb_mean_max_norm_after_{k}.png'), bbox_inches='tight')
             plt.close(fig)
+            
+
+    # for k, v in feature_maps.items():
+    #     print(k, v.shape)
+    #     if k == 'analysis':
+    #         # no channels for analysis output, so single plot
+    #         v_mean = v.mean(axis=-1)
+    #         v_max = v.max(axis=-1)
+
+    #         fig = plt.figure(dpi=150)
+
+    #         ax1 = fig.add_subplot(1, 2, 1)
+    #         ax1.imshow(v_mean[0, 0, ...], cmap='gray')
+    #         ax1.set_title(f'Mean of embedding after {k} block')
+    #         ax1.axis('off')
+
+    #         ax2 = fig.add_subplot(1, 2, 2)
+    #         ax2.imshow(v_max[0, 0, ...], cmap='gray')
+    #         ax2.set_title(f'Max of embedding after {k} block')
+    #         ax2.axis('off')
+
+    #         fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
+    #         plt.close(fig)
+    #     else:
+    #         channels = v.shape[1]
+    #         fig, axs = plt.subplots(2, channels, figsize=(15, 10), dpi=150)
+    #         for channel in range(channels):
+    #             v_channel_mean = v[0, channel, ...].mean(axis=-1)
+    #             v_channel_max = v[0, channel, ...].max(axis=-1)
+
+    #             axs[0][channel].imshow(v_channel_mean, cmap='gray')
+    #             axs[0][channel].set_title(f'Mean of channel {channel} after {k}')
+    #             axs[0][channel].axis('off')
+
+    #             axs[1][channel].imshow(v_channel_max, cmap='gray')
+    #             axs[1][channel].set_title(f'Max of channel {channel} after {k}')
+    #             axs[1][channel].axis('off')
+
+    #         # suptitle for entire figure
+    #         fig.suptitle(f'Mean and max of embeddings after {k} block')
+    #         fig.tight_layout()
+    #         fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
+    #         plt.close(fig)
 
 
 if __name__ == "__main__":
