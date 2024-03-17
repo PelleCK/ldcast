@@ -98,9 +98,10 @@ def plot_feature_maps(feature_maps, out_dir):
             axs[1, channel].set_title(f'Max of channel {channel}')
             axs[1, channel].axis('off')
 
-            axs[2, channel].imshow(v_channel_norm, cmap='viridis')
+            im_norm = axs[2, channel].imshow(v_channel_norm, cmap='viridis')
             axs[2, channel].set_title(f'Embedding norm of channel {channel}')
             axs[2, channel].axis('off')
+            fig.colorbar(im_norm, ax=axs[2, channel], fraction=0.046, pad=0.04)
 
         # suptitle for entire figure
         fig.suptitle(f'Mean, max, and norm of embeddings after {k} block')
