@@ -72,7 +72,7 @@ def plot_frame(R, fn, draw_border=True, t=None, label=None):
     
     fig.savefig(fn, bbox_inches='tight')
     plt.close(fig)
-    
+
 
 def plot_feature_maps(feature_maps, out_dir):
     for k, v in feature_maps.items():
@@ -98,7 +98,7 @@ def plot_feature_maps(feature_maps, out_dir):
             axs[1, channel].set_title(f'Max of channel {channel}')
             axs[1, channel].axis('off')
 
-            axs[2, channel].imshow(v_channel_norm, cmap='gray')
+            axs[2, channel].imshow(v_channel_norm, cmap='hot')
             axs[2, channel].set_title(f'Embedding norm of channel {channel}')
             axs[2, channel].axis('off')
 
