@@ -83,12 +83,16 @@ def plot_feature_maps(feature_maps, out_dir):
         if channels == 1:
             axs = np.expand_dims(axs, axis=-1)  # Expand the dimensions of axs to make it 2-dimensional
 
+        v_mean = v.mean(axis=-1)
+        v_max = v.max(axis=-1)
+        v_norm = np.linalg.norm(v, ord=2, axis=-1)
+        # calculate highest and lowest value for colorbar
+        v_norm_max = np.max(v_norm)
+        v_norm_min = np.min(v_norm)
         for channel in range(channels):
-            v_channel = v[0, channel, ...]
-            v_channel_mean = v_channel.mean(axis=-1)
-            v_channel_max = v_channel.max(axis=-1)
-            # Using numpy's linalg.norm for norm calculation
-            v_channel_norm = np.linalg.norm(v_channel, ord=2, axis=-1)
+            v_channel_mean = v_mean[0, channel, ...]
+            v_channel_max = v_max[0, channel, ...]
+            v_channel_norm = v_norm[0, channel, ...]
 
             axs[0, channel].imshow(v_channel_mean, cmap='gray')
             axs[0, channel].set_title(f'Mean of channel {channel}')
@@ -98,14 +102,14 @@ def plot_feature_maps(feature_maps, out_dir):
             axs[1, channel].set_title(f'Max of channel {channel}')
             axs[1, channel].axis('off')
 
-            im_norm = axs[2, channel].imshow(v_channel_norm, cmap='viridis', vmin=0, vmax=100)
+            im_norm = axs[2, channel].imshow(v_channel_norm, cmap='viridis', vmin=v_norm_min, vmax=v_norm_max)
             axs[2, channel].set_title(f'Embedding norm of channel {channel}')
             axs[2, channel].axis('off')
             fig.colorbar(im_norm, ax=axs[2, channel], fraction=0.046, pad=0.04)
 
         # suptitle for entire figure
         fig.suptitle(f'Mean, max, and norm of embeddings after {k} block')
-        plt.tight_layout(rect=[0, 0.03, 1, 0.95])  # Adjust layout to make room for suptitle
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
         plt.show()
         fig.savefig(os.path.join(out_dir, f'emb_mean_max_norm_after_{k}.png'), bbox_inches='tight')
         plt.close(fig)
