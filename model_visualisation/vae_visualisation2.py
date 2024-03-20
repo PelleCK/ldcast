@@ -13,6 +13,7 @@ import torch
 from ldcast.features.transform import Antialiasing
 from ldcast.visualization import plots
 from ldcast.models.autoenc import autoenc, encoder
+from ldcast.models.distributions import sample_from_standard_normal
 
 def read_data(
         data_dir, 
@@ -41,6 +42,24 @@ def read_data(
     
     R_past = np.stack(R_past, axis=0)
     return R_past
+
+# def read_knmi_data(
+#         data_dir
+#         ):
+#     all_files = os.listdir(data_dir)
+
+#     # Filter out only files (excluding directories)
+#     files_only = [file for file in all_files if os.path.isfile(os.path.join(data_dir, file))]
+
+#     # Take the first four files
+#     first_four_files = files_only[:4]
+
+#     R_past = []
+#     # Print the first four files
+#     for file in first_four_files:
+#         print(file)
+#         with h5py.File(os.path.join(data_dir, file), 'r') as f:
+            
     
 def transform_precip(
         R,
@@ -78,7 +97,7 @@ def inv_transform_precip(
     if R_max_output is not None:
         R[R > R_max_output] = R_max_output
     R = R[:,0,...]
-    return R.to(device='cpu').numpy()
+    return R.detach().numpy()
 
 #TODO: plot border function
 def plot_border(ax, crop_box=((128,480), (160,608))):    
@@ -184,7 +203,8 @@ def visualize_vae(
         crop_box=((128,480), (160,608)),
         draw_border=True
         ):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = "cpu"
     
     R_past = read_data(
         data_dir=data_dir, t0=t0, interval=interval,
@@ -195,17 +215,18 @@ def visualize_vae(
 
     vae = init_vae(vae_weights).to(device)
 
-    with torch.no_grad():
-        y, z, _ = vae(x, sample_posterior=True)
-        z = z.to(device='cpu').numpy()
+    y, mean, log_var = vae(x, sample_posterior=False)
+    z = sample_from_standard_normal(mean, log_var)
+    z = z.detach().numpy()
+    mean = mean.detach().numpy()
 
     R_pred = inv_transform_precip(y)[0, ...]
     print(x.shape, R_past.shape, z.shape, R_pred.shape)
 
     # t = t0 - (R_past.shape[0]-k-1) * interval
     # compute ts in advance for all frames
-    xs = x[0, 0, ...].cpu().numpy()
-    ys = y[0, 0, ...].cpu().numpy()
+    xs = x[0, 0, ...].detach().numpy()
+    ys = y[0, 0, ...].detach().numpy()
     ts = [t0 - (R_past.shape[0]-k-1) * interval for k in range(R_past.shape[0])]
     plot_vae_analysis(R_past, xs, z, ys, R_pred, ts, out_dir, draw_border=draw_border, crop_box=crop_box)
 

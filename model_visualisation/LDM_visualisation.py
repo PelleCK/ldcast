@@ -146,6 +146,13 @@ def forecast_demo(
             def hook_fn(module, input, output):
                 feature_maps[key] = output.detach().cpu().numpy()  # Detach the output to avoid saving computation graph
             return hook_fn
+        
+        feature_maps_2 = {}
+
+        def get_hook_fn2(key):
+            def hook_fn(module, input, output):
+                feature_maps_2[key] = output
+            return hook_fn
 
         # def hook_fn(module, input, output):
         #     feature_maps[module] = output
@@ -154,6 +161,18 @@ def forecast_demo(
         fc.ldm.context_encoder.temporal_transformer[-1].register_forward_hook(get_hook_fn("temporal_transformer"))
         fc.ldm.context_encoder.fusion.register_forward_hook(get_hook_fn("fusion"))
         fc.ldm.context_encoder.forecast[-1].register_forward_hook(get_hook_fn("forecast"))
+
+        fc.ldm.model.input_blocks[0].register_forward_hook(get_hook_fn2("input_block_0"))
+        fc.ldm.model.input_blocks[1].register_forward_hook(get_hook_fn2("input_block_1"))
+        fc.ldm.model.input_blocks[2].register_forward_hook(get_hook_fn2("input_block_2"))
+        fc.ldm.model.input_blocks[3].register_forward_hook(get_hook_fn2("input_block_3"))
+
+        fc.ldm.model.middle_block.register_forward_hook(get_hook_fn2("middle_block"))
+
+        fc.ldm.model.output_blocks[0].register_forward_hook(get_hook_fn2("output_block_0"))
+        fc.ldm.model.output_blocks[1].register_forward_hook(get_hook_fn2("output_block_1"))
+        fc.ldm.model.output_blocks[2].register_forward_hook(get_hook_fn2("output_block_2"))
+        fc.ldm.model.output_blocks[3].register_forward_hook(get_hook_fn2("output_block_3"))
 
         R_pred = fc(
             R_past,
@@ -184,51 +203,10 @@ def forecast_demo(
     # plot feature maps from dictionary
     # take the mean over the embedding dimension (last dimension, length 128)
     # then plot the 32 channels with each channel as a subplot
-    plot_feature_maps(feature_maps, out_dir)
+    # plot_feature_maps(feature_maps, out_dir)
             
-
-    # for k, v in feature_maps.items():
-    #     print(k, v.shape)
-    #     if k == 'analysis':
-    #         # no channels for analysis output, so single plot
-    #         v_mean = v.mean(axis=-1)
-    #         v_max = v.max(axis=-1)
-
-    #         fig = plt.figure(dpi=150)
-
-    #         ax1 = fig.add_subplot(1, 2, 1)
-    #         ax1.imshow(v_mean[0, 0, ...], cmap='gray')
-    #         ax1.set_title(f'Mean of embedding after {k} block')
-    #         ax1.axis('off')
-
-    #         ax2 = fig.add_subplot(1, 2, 2)
-    #         ax2.imshow(v_max[0, 0, ...], cmap='gray')
-    #         ax2.set_title(f'Max of embedding after {k} block')
-    #         ax2.axis('off')
-
-    #         fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
-    #         plt.close(fig)
-    #     else:
-    #         channels = v.shape[1]
-    #         fig, axs = plt.subplots(2, channels, figsize=(15, 10), dpi=150)
-    #         for channel in range(channels):
-    #             v_channel_mean = v[0, channel, ...].mean(axis=-1)
-    #             v_channel_max = v[0, channel, ...].max(axis=-1)
-
-    #             axs[0][channel].imshow(v_channel_mean, cmap='gray')
-    #             axs[0][channel].set_title(f'Mean of channel {channel} after {k}')
-    #             axs[0][channel].axis('off')
-
-    #             axs[1][channel].imshow(v_channel_max, cmap='gray')
-    #             axs[1][channel].set_title(f'Max of channel {channel} after {k}')
-    #             axs[1][channel].axis('off')
-
-    #         # suptitle for entire figure
-    #         fig.suptitle(f'Mean and max of embeddings after {k} block')
-    #         fig.tight_layout()
-    #         fig.savefig(os.path.join(out_dir, f'emb_mean_max_after_{k}.png'), bbox_inches='tight')
-    #         plt.close(fig)
-
-
+    for k, v in feature_maps_2.items():
+        print(k, v.shape)
+    
 if __name__ == "__main__":
         Fire(forecast_demo)
