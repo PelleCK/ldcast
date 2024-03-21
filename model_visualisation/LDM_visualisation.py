@@ -163,9 +163,11 @@ def forecast_demo(
         fc.ldm.context_encoder.forecast[-1].register_forward_hook(get_hook_fn("forecast"))
 
         input_blocks = fc.ldm.model.input_blocks
+        print("\n\nInput blocks: \n" + "-"*40)
         for i, input_block in enumerate(input_blocks):
             print(input_block)
             input_block.register_forward_hook(get_hook_fn2(f"input_block_{i}: {input_block.__class__.__name__}"))
+        print("-"*40)
         # input_blocks[0].register_forward_hook(get_hook_fn2("input_block_0"))
         # input_blocks[1].register_forward_hook(get_hook_fn2("input_block_1"))
         # input_blocks[2].register_forward_hook(get_hook_fn2("input_block_2"))
@@ -177,9 +179,11 @@ def forecast_demo(
         middle_block.register_forward_hook(get_hook_fn2(f"middle_block: {middle_block.__class__.__name__}"))
 
         output_blocks = fc.ldm.model.output_blocks
+        print("\n\nOutput blocks: \n" + "-"*40)
         for i, output_block in enumerate(output_blocks):
             print(output_block)
             output_block.register_forward_hook(get_hook_fn2(f"output_block_{i}: {output_block.__class__.__name__}"))
+        print("-"*40)
         # output_blocks[0].register_forward_hook(get_hook_fn2("output_block_0"))
         # output_blocks[1].register_forward_hook(get_hook_fn2("output_block_1"))
         # output_blocks[2].register_forward_hook(get_hook_fn2("output_block_2"))
