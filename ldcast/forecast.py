@@ -1,3 +1,6 @@
+import os
+os.environ['PYTORCH_NO_CUDA_MEMORY_CACHING'] = '1'
+
 import contextlib
 import gc
 
@@ -47,6 +50,7 @@ class Forecast:
 
         # setup LDM
         self.ldm = self._init_model()
+        print(torch.cuda.device_count())
         if gpu is not None:
             if gpu == 'auto':
                 if torch.cuda.device_count() > 0:

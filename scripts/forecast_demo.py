@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 import glob
 import os
 
+os.environ['PYTORCH_NO_CUDA_MEMORY_CACHING'] = '1'
+
 from fire import Fire
 import h5py
 from matplotlib import pyplot as plt
