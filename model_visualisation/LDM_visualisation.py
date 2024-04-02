@@ -161,6 +161,7 @@ def forecast_demo(
         fc.ldm.context_encoder.temporal_transformer[-1].register_forward_hook(get_hook_fn("temporal_transformer"))
         fc.ldm.context_encoder.fusion.register_forward_hook(get_hook_fn("fusion"))
         fc.ldm.context_encoder.forecast[-1].register_forward_hook(get_hook_fn("forecast"))
+        
 
         input_blocks = fc.ldm.model.input_blocks
         print("\n\nInput blocks: \n" + "-"*40)
