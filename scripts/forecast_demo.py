@@ -18,14 +18,22 @@ def read_data(
     t0=datetime(2021,6,22,18,35),
     interval=timedelta(minutes=5),
     past_timesteps=4,
-    crop_box=((128,480), (160,608))
+    crop_box=((128,480), (160,608)),
+    dataset_type="original"
 ):
     cb = crop_box
     R_past = []
     t = t0 - (past_timesteps-1) * interval
     for i in range(past_timesteps):
-        timestamp = t.strftime("%y%j%H%M")
-        fn = f"RZC{timestamp}VL.801.h5"
+        if dataset_type == "original":
+            timestamp = t.strftime("%y%j%H%M")
+            fn = f"RZC{timestamp}VL.801.h5"
+        elif dataset_type == "knmi":
+            timestamp = t.strftime("%Y%m%d%H%M")
+            fn = f"RAD_NL25_PCP_NA_{timestamp}.h5"
+        else:
+            raise ValueError(f"Unknown dataset type {dataset_type}.")
+        
         fn = os.path.join(data_dir, fn)
         found_files = glob.glob(fn)
         if found_files:
@@ -33,7 +41,11 @@ def read_data(
         else:
             raise FileNotFoundError(f"Unable to find data file {fn}.")
         with h5py.File(fn, 'r') as f:
-            R = f["dataset1"]["data1"]["data"][:]
+            if dataset_type == "original":
+                R = f["dataset1"]["data1"]["data"][:]
+            elif dataset_type == "knmi":
+                R = f["image1"]["image_data"][:]
+        
         R = R[cb[0][0]:cb[0][1], cb[1][0]:cb[1][1]]
         R_past.append(R)
         t += interval
@@ -87,10 +99,15 @@ def forecast_demo(
     crop_box=((128,480), (160,608)),
     draw_border=True,
     ensemble_members=1,
+    dataset_type="original"
 ):
+    if type(t0) is str:
+        t0 = datetime.strptime(t0, "%Y%m%d%H%M")
+    
     R_past = read_data(
         data_dir=data_dir, t0=t0, interval=interval,
-        past_timesteps=past_timesteps, crop_box=crop_box
+        past_timesteps=past_timesteps, crop_box=crop_box,
+        dataset_type=dataset_type
     )
     if ensemble_members == 1:
         fc = forecast.Forecast(
