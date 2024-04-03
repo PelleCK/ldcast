@@ -30,7 +30,7 @@ def setup_autoenc_training(
     trainer = pl.Trainer(
         accelerator=accelerator,
         devices=devices,
-        max_epochs=1000,
+        max_epochs=5, # 1000
         strategy='dp' if (num_gpus > 1) else None,
         callbacks=callbacks
     )
