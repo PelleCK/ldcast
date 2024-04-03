@@ -18,14 +18,14 @@ def setup_autoenc_training(
     early_stopping = pl.callbacks.EarlyStopping(
         "val_rec_loss", patience=6, verbose=True
     )
-#    checkpoint = pl.callbacks.ModelCheckpoint(
-#        dirpath=model_dir,
-#        filename="{epoch}-{val_rec_loss:.4f}",
-#        monitor="val_rec_loss",
-#        every_n_epochs=1,
-#        save_top_k=3
-#    )
-    callbacks = [early_stopping] # , checkpoint
+    checkpoint = pl.callbacks.ModelCheckpoint(
+        dirpath=model_dir,
+        filename="{epoch}-{val_rec_loss:.4f}",
+        monitor="val_rec_loss",
+        every_n_epochs=1,
+        save_top_k=3
+    )
+    callbacks = [early_stopping, checkpoint] # , checkpoint
 
     trainer = pl.Trainer(
         accelerator=accelerator,
