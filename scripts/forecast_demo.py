@@ -102,7 +102,7 @@ def forecast_demo(
     dataset_type="original"
 ):
     if type(t0) is str:
-        t0 = datetime.strptime(t0, "%Y%m%d%H%M")
+        t0 = datetime.strptime(t0, "%Y/%m/%d %H:%M")
     
     R_past = read_data(
         data_dir=data_dir, t0=t0, interval=interval,
