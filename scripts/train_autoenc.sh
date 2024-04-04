@@ -9,4 +9,4 @@
 #SBATCH --error=/vol/knmimo-nobackup/users/pkools/thesis-forecasting/ldcast/scripts/logs/train_autoenc-%j.err
 
 source ../.ldcast_venv/bin/activate
-python train_autoenc.py
+python train_autoenc.py --batch_size=32
