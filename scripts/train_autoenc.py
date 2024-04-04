@@ -3,6 +3,8 @@ import gzip
 import os
 import pickle
 
+os.environ['PYTORCH_NO_CUDA_MEMORY_CACHING'] = '1'
+
 from fire import Fire
 import numpy as np
 from omegaconf import OmegaConf

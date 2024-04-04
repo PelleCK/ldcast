@@ -2,7 +2,7 @@
 #SBATCH --account=cseduproject
 #SBATCH --partition=csedu
 #SBATCH --qos=csedu-large
-#SBATCH --mem=10G
+#SBATCH --mem=16G
 #SBATCH --gres=gpu:1
 #SBATCH --time=01:00:00
 #SBATCH --output=/vol/knmimo-nobackup/users/pkools/thesis-forecasting/ldcast/scripts/logs/train_autoenc-%j.out
