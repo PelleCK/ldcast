@@ -34,7 +34,7 @@ def setup_genforecast_training(
         accelerator=accelerator,
         devices=devices,
         max_epochs=1000,
-        strategy='dp' if (num_gpus > 1) else None,
+        strategy='dp' if (num_gpus > 1) else 'auto',
         callbacks=callbacks,
         #precision=16
     )
