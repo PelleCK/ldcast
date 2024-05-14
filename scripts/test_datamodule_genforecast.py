@@ -103,23 +103,34 @@ def train(
         sample_shape=sample_shape
     )
 
-    print("Setting up model...")
-    (model, trainer) = setup_model(
-        num_timesteps=future_timesteps//4,
-        use_obs=use_obs,
-        use_nwp=use_nwp,
-        model_dir=model_dir,
-        lr=lr
-    )
-    if initial_weights is not None:
-        print(f"Loading weights from {initial_weights}...")
-        model.load_state_dict(
-            torch.load(initial_weights, map_location=model.device),
-            strict=strict_weights
-        )
+    datamodule.setup(stage='fit')
+    train_loader = datamodule.train_dataloader()
+    train_iter = iter(train_loader)
+    batch = next(train_iter)
 
-    print("Starting training...")
-    trainer.fit(model, datamodule=datamodule, ckpt_path=ckpt_path)
+    print('\nbatch')
+    print('\n type of batch is:')
+    print(type(batch))
+    print('\n n elements in batch:')
+    print(len(batch))
+
+    # print("Setting up model...")
+    # (model, trainer) = setup_model(
+    #     num_timesteps=future_timesteps//4,
+    #     use_obs=use_obs,
+    #     use_nwp=use_nwp,
+    #     model_dir=model_dir,
+    #     lr=lr
+    # )
+    # if initial_weights is not None:
+    #     print(f"Loading weights from {initial_weights}...")
+    #     model.load_state_dict(
+    #         torch.load(initial_weights, map_location=model.device),
+    #         strict=strict_weights
+    #     )
+
+    # print("Starting training...")
+    # trainer.fit(model, datamodule=datamodule, ckpt_path=ckpt_path)
 
 
 def main(config=None, **kwargs):
