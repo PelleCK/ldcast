@@ -1,8 +1,10 @@
 from bisect import bisect_left
+import os
 
 import numpy as np
 import pytorch_lightning as pl
-from torch.utils.data import DataLoader
+import torch
+from torch.utils.data import DataLoader, Dataset
 
 from . import batch
 
@@ -162,3 +164,104 @@ class DataModule(pl.LightningDataModule):
 
     def test_dataloader(self):
         return self.dataloader("test")
+
+class KNMIDataset(Dataset):
+    """Custom dataset for loading preprocessed KNMI data
+
+    Args:
+        list_IDs (list): List of tuples, each containing sequences of input and target filenames.
+        data_path (str): Path to the directory containing the preprocessed data files.
+        x_seq_size (int): Number of timesteps in the input sequence.
+        y_seq_size (int): Number of timesteps in the target sequence.
+        load_prep (bool): Flag indicating whether the data is preprocessed.
+    """
+
+    def __init__(self, list_IDs, data_path, x_seq_size=6, y_seq_size=3, load_prep=True):
+        self.list_IDs = list_IDs
+        self.data_path = data_path
+        self.x_seq_size = x_seq_size
+        self.y_seq_size = y_seq_size
+        self.load_prep = load_prep
+
+    def __len__(self):
+        return len(self.list_IDs)
+
+    def __getitem__(self, index):
+        list_IDs_temp = self.list_IDs[index]
+        X, y = self.__data_generation(list_IDs_temp)
+        return X, y
+
+    def __data_generation(self, list_IDs_temp):
+        X = np.empty((self.x_seq_size, 256, 256, 1), dtype=np.float32)
+        y = np.empty((self.y_seq_size, 256, 256, 1), dtype=np.float32)
+        
+        x_IDs, y_IDs = list_IDs_temp
+        for t in range(self.x_seq_size):
+            X[t] = np.load(os.path.join(self.data_path, '{}.npy'.format(x_IDs[t])))
+
+        for t in range(self.y_seq_size):
+            y[t] = np.load(os.path.join(self.data_path, '{}.npy'.format(y_IDs[t])))
+
+        # Permute to match the required shape: (x_seq_size, img_width, img_height, 1) to (1, 1, x_seq_size, img_width, img_height)
+        X = torch.tensor(X).permute(3, 0, 1, 2).unsqueeze(0)
+        y = torch.tensor(y).permute(3, 0, 1, 2).unsqueeze(0)
+
+        return X, y
+
+# Custom collate function for batching the data
+# This ensures that each batch of KNMI data is in the right shape for the model
+def collate_fn(batch):
+    data = [item[0] for item in batch]
+    targets = [item[1] for item in batch]
+
+    data = torch.stack(data)  # (batch_size, 1, 1, X_sequence_length, 256, 256)
+    targets = torch.stack(targets)  # (batch_size, 1, Y_sequence_length, 256, 256)
+
+    # Create timestamps tensor for the batch
+    batch_size = data.size(0)
+    x_seq_size = data.size(2)
+    timestamps = torch.arange(x_seq_size).unsqueeze(0).repeat(batch_size, 1)  # (batch_size, X_sequence_length)
+
+    return [[data, timestamps]], targets
+
+class KNMIDataModule(pl.LightningDataModule):
+    """PyTorch Lightning DataModule for loading KNMI data
+
+    Args:
+        train_data (list): List of training data file IDs.
+        val_data (list): List of validation data file IDs.
+        data_path (str): Path to the directory containing the preprocessed data files.
+        batch_size (int): Batch size for the DataLoader.
+        x_seq_size (int): Number of timesteps in the input sequence.
+        y_seq_size (int): Number of timesteps in the target sequence.
+    """
+    def __init__(self, train_data, val_data, data_path, batch_size=32, x_seq_size=6, y_seq_size=3):
+        super().__init__()
+        self.train_data = train_data
+        self.val_data = val_data
+        self.data_path = data_path
+        self.batch_size = batch_size
+        self.x_seq_size = x_seq_size
+        self.y_seq_size = y_seq_size
+
+    def setup(self, stage=None):
+        self.train_dataset = KNMIDataset(self.train_data, self.data_path, 
+                                           x_seq_size=self.x_seq_size, y_seq_size=self.y_seq_size)
+        self.val_dataset = KNMIDataset(self.val_data, self.data_path, 
+                                         x_seq_size=self.x_seq_size, y_seq_size=self.y_seq_size)
+
+    def train_dataloader(self):
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0, pin_memory=True, collate_fn=collate_fn)
+
+    def val_dataloader(self):
+        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False, num_workers=0, pin_memory=True, collate_fn=collate_fn)
+
+# Usage example:
+# train_IDs = np.load('datasets/train_randomsplit.npy', allow_pickle=True)
+# val_IDs = np.load('datasets/val_randomsplit.npy', allow_pickle=True)
+# data_path = '/restore/knmimo/preprocessed/rtcor/'
+
+# data_module = CustomDataModule(train_data=train_IDs, val_data=val_IDs, data_path=data_path, batch_size=32)
+# data_module.setup()
+# train_loader = data_module.train_dataloader()
+# val_loader = data_module.val_dataloader()

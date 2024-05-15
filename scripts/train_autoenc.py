@@ -12,6 +12,28 @@ from ldcast.models.autoenc import encoder, training
 
 file_dir = os.path.dirname(os.path.abspath(__file__))
 
+def setup_knmi_data(
+    train_IDs_fn,
+    val_IDs_fn,
+    data_path,
+    batch_size=64,
+    num_timesteps=8,
+):
+    # Usage example:
+    train_IDs = np.load(train_IDs_fn, allow_pickle=True)
+    val_IDs = np.load(val_IDs_fn, allow_pickle=True)
+
+    # data_module = split.DataModule(train_data=train_IDs, val_data=val_IDs, data_path=data_path, batch_size=32)
+    datamodule = split.KNMIDataModule(
+        train_data=train_IDs,
+        val_data=val_IDs,
+        data_path=data_path,
+        batch_size=batch_size,
+        x_seq_size=num_timesteps,
+        y_seq_size=num_timesteps
+    )
+    gc.collect()
+    return datamodule
 
 def setup_data(
     var="RZC", 
@@ -84,19 +106,41 @@ def train(
     sampler_file=None,
     num_timesteps=8,
     chunks_file="../data/split_chunks.pkl.gz",
+    data_path="../data/knmi_data/rtcor",
+    train_IDs_fn='../data/knmi_data/data_splits/train2008_2018_3y_30m.npy',
+    val_IDs_fn='../data/knmi_data/data_splits/val2019_3y_30m.npy',
     model_dir=None,
     ckpt_path=None
 ):
     print("Loading data...")
-    datamodule = setup_data(
-        var=var, batch_size=batch_size, sampler_file=sampler_file,
-        num_timesteps=num_timesteps, chunks_file=chunks_file
+    datamodule = setup_knmi_data(
+        train_IDs_fn=train_IDs_fn,
+        val_IDs_fn=val_IDs_fn,
+        data_path=data_path,
+        batch_size=batch_size,
+        num_timesteps=num_timesteps,
     )
+
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
 
     print("Setting up model...")
     (model, trainer) = setup_model(model_dir=model_dir)
 
     print("Starting training...")
+    print(f"Model Directory: {model_dir}")
+    if ckpt_path:
+        print(f"Resuming from given checkpoint: {ckpt_path}")
+    else:
+        # Check for the latest checkpoint in the model directory
+        latest_ckpt_path = os.path.join(model_dir, "latest.ckpt")
+        if os.path.exists(latest_ckpt_path):
+            ckpt_path = latest_ckpt_path
+            print(f"Resuming from latest checkpoint: {ckpt_path}")
+        else:
+            print("No checkpoint provided, starting from scratch")
+            ckpt_path = None
+    
     trainer.fit(model, datamodule=datamodule, ckpt_path=ckpt_path)
 
 
